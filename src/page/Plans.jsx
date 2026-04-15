@@ -147,7 +147,7 @@ export default function Plan() {
               <img
                 src={
                   plan.image
-                    ? `http://localhost:3000/uploads/${plan.image}`
+                    ? `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`
                     : "https://via.placeholder.com/400"
                 }
                 className="w-full h-60 object-cover bg-white"
