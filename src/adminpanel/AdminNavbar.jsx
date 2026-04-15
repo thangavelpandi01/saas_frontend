@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../features/themeSlice";
 import { logoutUser } from "../features/authSlice";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function AdminNavbar() {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // ✅ FIX
+
   const mode = useSelector((state) => state.theme.mode);
   const token = useSelector((state) => state.auth.token);
 
@@ -13,13 +16,12 @@ export default function AdminNavbar() {
   const handleLogout = () => {
     dispatch(logoutUser(token));
     setShowLogoutModal(false);
-    navigate("/login"); 
-
+    navigate("/login"); // ✅ works
   };
 
   return (
     <>
-      {/* ================= NAVBAR ================= */}
+      {/* NAVBAR */}
       <nav
         className={`w-full shadow-lg transition-all duration-300 ${
           mode === "dark"
@@ -30,21 +32,37 @@ export default function AdminNavbar() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
           {/* BRAND */}
-          <div className="text-xl font-bold tracking-wide">
+          <div
+            className="text-xl font-bold tracking-wide cursor-pointer"
+            onClick={() => navigate("/admin/dashboard")}
+          >
             Admin Panel
           </div>
 
           {/* MENU */}
           <div className="hidden md:flex gap-8 font-medium">
-            <a className="hover:text-gray-200 transition" href="/admin/dashboard">
-              dashboard
-            </a>
-            <a className="hover:text-gray-200 transition" href="/admin/plans">
+
+            <Link
+              className="hover:text-gray-200 transition"
+              to="/admin/dashboard"
+            >
+              Dashboard
+            </Link>
+
+            <Link
+              className="hover:text-gray-200 transition"
+              to="/admin/plans"
+            >
               Plans
-            </a>
-            <a className="hover:text-gray-200 transition" href="/admin/users">
+            </Link>
+
+            <Link
+              className="hover:text-gray-200 transition"
+              to="/admin/users"
+            >
               Users List
-            </a>
+            </Link>
+
           </div>
 
           {/* ACTIONS */}
@@ -71,7 +89,7 @@ export default function AdminNavbar() {
         </div>
       </nav>
 
-      {/* ================= MODAL OVERLAY ================= */}
+      {/* MODAL */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
 
@@ -84,27 +102,22 @@ export default function AdminNavbar() {
           {/* MODAL CARD */}
           <div className="relative bg-white rounded-2xl shadow-2xl w-[90%] max-w-md p-6 animate-fadeIn">
 
-            {/* ICON */}
             <div className="flex justify-center mb-4">
               <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center text-2xl">
                 ⚠️
               </div>
             </div>
 
-            {/* TITLE */}
             <h2 className="text-xl font-bold text-center text-gray-800">
               Confirm Logout
             </h2>
 
-            {/* TEXT */}
             <p className="text-center text-gray-500 mt-2">
-              Are you sure you want to logout from your account?
+              Are you sure you want to logout?
             </p>
 
-            {/* BUTTONS */}
             <div className="flex justify-center gap-4 mt-6">
 
-              {/* CANCEL */}
               <button
                 onClick={() => setShowLogoutModal(false)}
                 className="px-5 py-2 rounded-full bg-gray-200 hover:bg-gray-300 transition"
@@ -112,20 +125,19 @@ export default function AdminNavbar() {
                 Cancel
               </button>
 
-              {/* CONFIRM */}
               <button
                 onClick={handleLogout}
                 className="px-5 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-md active:scale-95 transition"
               >
                 Yes, Logout
               </button>
-            </div>
 
+            </div>
           </div>
         </div>
       )}
 
-      {/* ================= SIMPLE ANIMATION ================= */}
+      {/* ANIMATION */}
       <style>
         {`
           @keyframes fadeIn {
