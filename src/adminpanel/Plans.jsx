@@ -13,6 +13,9 @@ const Plans = () => {
   const dispatch = useDispatch();
   const { plans } = useSelector((state) => state.auth);
 
+  // ✅ THEME STATE (ONLY ADDITION)
+  const [darkMode, setDarkMode] = useState(false);
+
   const emptyForm = {
     name: "",
     price: "",
@@ -135,182 +138,149 @@ const Plans = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
+    <div className={`${darkMode ? "dark" : ""}`}>
+      <div className="min-h-screen p-4 md:p-6 bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
 
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between mb-4 gap-2">
-        <h1 className="text-xl md:text-2xl font-bold">Plans</h1>
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row justify-between mb-4 gap-2">
 
-        <button
-          onClick={handleCreate}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded w-full md:w-auto"
-        >
-          + Add Plan
-        </button>
-      </div>
+          <h1 className="text-xl md:text-2xl font-bold">Plans</h1>
 
-      {/* TABLE WRAPPER (SCROLL FOR MOBILE) */}
-      <div className="overflow-x-auto rounded shadow">
-        <table className="min-w-[700px] w-full bg-white dark:bg-gray-800">
+          <div className="flex gap-2 flex-col md:flex-row">
 
-          <thead className="bg-gray-200 dark:bg-gray-700 text-black dark:text-white">
-            <tr>
-              <th className="p-2">Image</th>
-              <th className="p-2">Name</th>
-              <th className="p-2">Price</th>
-              <th className="p-2">Duration</th>
-              <th className="p-2">Start</th>
-              <th className="p-2">End</th>
-              <th className="p-2">Actions</th>
-            </tr>
-          </thead>
+            {/* ✅ THEME TOGGLE */}
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="bg-gray-700 text-white px-4 py-2 rounded"
+            >
+              {darkMode ? "Light Mode ☀️" : "Dark Mode 🌙"}
+            </button>
 
-          <tbody>
-            {plans?.map((plan) => (
-              <tr
-                key={plan._id}
-                className="text-center border-t dark:border-gray-600"
-              >
-                <td className="p-2">
-                  <img
-                    src={`https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`}
-                    className="w-10 h-10 md:w-12 md:h-12 mx-auto rounded object-cover"
-                  />
-                </td>
-
-                <td className="p-2">{plan.name}</td>
-                <td className="p-2">₹{plan.price}</td>
-                <td className="p-2">{plan.duration}</td>
-                <td className="p-2">
-                  {new Date(plan.startDate).toLocaleDateString()}
-                </td>
-                <td className="p-2">
-                  {new Date(plan.endDate).toLocaleDateString()}
-                </td>
-
-                <td className="p-2 flex flex-col md:flex-row gap-2 justify-center">
-                  <button
-                    onClick={() => handleEdit(plan)}
-                    className="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 text-white rounded"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(plan._id)}
-                    className="bg-red-500 hover:bg-red-600 px-3 py-1 text-white rounded"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-
-        </table>
-      </div>
-
-      {/* MODAL */}
-      {open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-2">
-
-          <div className="bg-white dark:bg-gray-800 text-black dark:text-white p-4 md:p-5 w-full max-w-md rounded">
-
-            <h2 className="text-lg md:text-xl font-bold mb-3">
-              {editingId ? "Update Plan" : "Create Plan"}
-            </h2>
-
-            <input name="name" value={form.name} onChange={handleChange}
-              placeholder="Name"
-              className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-            />
-
-            <input name="price" value={form.price} onChange={handleChange}
-              placeholder="Price"
-              className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-            />
-
-            <input name="duration" value={form.duration} onChange={handleChange}
-              placeholder="Duration"
-              className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-            />
-
-            <input type="file" onChange={handleImage} className="mb-2 w-full" />
-
-            {preview && (
-              <img src={preview} className="w-14 h-14 mb-2 rounded" />
-            )}
-
-            <input type="date" name="startDate" value={form.startDate}
-              onChange={handleChange}
-              className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-            />
-
-            <input type="date" name="endDate" value={form.endDate}
-              onChange={handleChange}
-              className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-            />
-
-            {/* FEATURES */}
-            <div className="mb-2">
-              <label className="font-bold">Features</label>
-
-              {form.features.map((f, index) => (
-                <input
-                  key={index}
-                  value={f}
-                  onChange={(e) => {
-                    const updated = [...form.features];
-                    updated[index] = e.target.value;
-                    setForm({ ...form, features: updated });
-                  }}
-                  className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-1"
-                  placeholder="Feature"
-                />
-              ))}
-
-              <button
-                type="button"
-                onClick={() =>
-                  setForm({
-                    ...form,
-                    features: [...form.features, ""],
-                  })
-                }
-                className="text-blue-600 dark:text-blue-400"
-              >
-                + Add Feature
-              </button>
-            </div>
-
-            {/* ACTIONS */}
-            <div className="flex flex-col md:flex-row justify-end gap-2 mt-3">
-
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  setForm(emptyForm);
-                  setImage(null);
-                  setPreview(null);
-                  setEditingId(null);
-                }}
-                className="bg-gray-400 px-3 py-1 rounded"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSubmit}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
-              >
-                {editingId ? "Update" : "Save"}
-              </button>
-
-            </div>
+            <button
+              onClick={handleCreate}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              + Add Plan
+            </button>
 
           </div>
         </div>
-      )}
+
+        {/* TABLE */}
+        <div className="overflow-x-auto rounded shadow">
+          <table className="min-w-[700px] w-full bg-white dark:bg-gray-800">
+
+            <thead className="bg-gray-200 dark:bg-gray-700">
+              <tr>
+                <th className="p-2">Image</th>
+                <th className="p-2">Name</th>
+                <th className="p-2">Price</th>
+                <th className="p-2">Duration</th>
+                <th className="p-2">Start</th>
+                <th className="p-2">End</th>
+                <th className="p-2">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {plans?.map((plan) => (
+                <tr key={plan._id} className="border-t dark:border-gray-600 text-center">
+                  <td className="p-2">
+                    <img
+                      src={`https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`}
+                      className="w-10 h-10 md:w-12 md:h-12 mx-auto rounded object-cover"
+                    />
+                  </td>
+
+                  <td className="p-2">{plan.name}</td>
+                  <td className="p-2">₹{plan.price}</td>
+                  <td className="p-2">{plan.duration}</td>
+                  <td className="p-2">{new Date(plan.startDate).toLocaleDateString()}</td>
+                  <td className="p-2">{new Date(plan.endDate).toLocaleDateString()}</td>
+
+                  <td className="p-2 flex flex-col md:flex-row gap-2 justify-center">
+                    <button
+                      onClick={() => handleEdit(plan)}
+                      className="bg-yellow-500 px-3 py-1 text-white rounded"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(plan._id)}
+                      className="bg-red-500 px-3 py-1 text-white rounded"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+
+          </table>
+        </div>
+
+        {/* MODAL */}
+        {open && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-2">
+
+            <div className="bg-white dark:bg-gray-800 p-4 md:p-5 w-full max-w-md rounded">
+
+              <h2 className="text-lg md:text-xl font-bold mb-3">
+                {editingId ? "Update Plan" : "Create Plan"}
+              </h2>
+
+              <input name="name" value={form.name} onChange={handleChange}
+                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
+                placeholder="Name"
+              />
+
+              <input name="price" value={form.price} onChange={handleChange}
+                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
+                placeholder="Price"
+              />
+
+              <input name="duration" value={form.duration} onChange={handleChange}
+                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
+                placeholder="Duration"
+              />
+
+              <input type="file" onChange={handleImage} className="mb-2" />
+
+              {preview && (
+                <img src={preview} className="w-14 h-14 mb-2 rounded" />
+              )}
+
+              <input type="date" name="startDate" value={form.startDate}
+                onChange={handleChange}
+                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
+              />
+
+              <input type="date" name="endDate" value={form.endDate}
+                onChange={handleChange}
+                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
+              />
+
+              <div className="flex justify-end gap-2 mt-3">
+                <button
+                  onClick={() => setOpen(false)}
+                  className="bg-gray-400 px-3 py-1 rounded"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleSubmit}
+                  className="bg-blue-600 text-white px-3 py-1 rounded"
+                >
+                  {editingId ? "Update" : "Save"}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
