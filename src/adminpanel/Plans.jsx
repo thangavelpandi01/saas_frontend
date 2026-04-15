@@ -13,8 +13,8 @@ const Plans = () => {
   const dispatch = useDispatch();
 
   const { plans } = useSelector((state) => state.auth);
-  const { mode } = useSelector((state) => state.theme); // ✅ THEME
-  const isDark = mode === "dark"; // ✅ MATCH USERS PAGE
+  const { mode } = useSelector((state) => state.theme); // ✅ ADDED
+  const isDark = mode === "dark"; // ✅ ADDED
 
   const emptyForm = {
     name: "",
@@ -140,8 +140,8 @@ const Plans = () => {
 
   return (
     <div
-      className={`min-h-screen p-6 transition-all duration-300 ${
-        isDark ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
+      className={`min-h-screen p-4 md:p-6 transition-all duration-300 ${
+        isDark ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
       }`}
     >
       {/* HEADER */}
@@ -150,7 +150,7 @@ const Plans = () => {
 
         <button
           onClick={handleCreate}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-500 text-white px-4 py-2 rounded w-full md:w-auto"
         >
           + Add Plan
         </button>
@@ -158,21 +158,20 @@ const Plans = () => {
 
       {/* TABLE */}
       <div
-        className={`overflow-x-auto rounded-xl shadow-md border ${
-          isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-white"
+        className={`overflow-x-auto rounded shadow border ${
+          isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
         }`}
       >
-        <table className="w-full min-w-[700px] text-center">
-
-          <thead className={isDark ? "bg-white/10" : "bg-gray-100"}>
+        <table className="w-full min-w-[700px]">
+          <thead className={isDark ? "bg-gray-700" : "bg-gray-200"}>
             <tr>
-              <th className="p-3">Image</th>
-              <th className="p-3">Name</th>
-              <th className="p-3">Price</th>
-              <th className="p-3">Duration</th>
-              <th className="p-3">Start</th>
-              <th className="p-3">End</th>
-              <th className="p-3">Actions</th>
+              <th className="p-2">Image</th>
+              <th className="p-2">Name</th>
+              <th className="p-2">Price</th>
+              <th className="p-2">Duration</th>
+              <th className="p-2">Start</th>
+              <th className="p-2">End</th>
+              <th className="p-2">Actions</th>
             </tr>
           </thead>
 
@@ -180,30 +179,30 @@ const Plans = () => {
             {plans?.map((plan) => (
               <tr
                 key={plan._id}
-                className={`border-t transition ${
+                className={`text-center border-t ${
                   isDark
-                    ? "border-white/10 hover:bg-white/5"
+                    ? "border-gray-600 hover:bg-gray-700"
                     : "border-gray-200 hover:bg-gray-50"
                 }`}
               >
-                <td className="p-3">
+                <td className="p-2">
                   <img
                     src={`https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`}
                     className="w-12 h-12 mx-auto rounded object-cover"
                   />
                 </td>
 
-                <td className="p-3">{plan.name}</td>
-                <td className="p-3">₹{plan.price}</td>
-                <td className="p-3">{plan.duration}</td>
-                <td className="p-3">
+                <td className="p-2">{plan.name}</td>
+                <td className="p-2">₹{plan.price}</td>
+                <td className="p-2">{plan.duration}</td>
+                <td className="p-2">
                   {new Date(plan.startDate).toLocaleDateString()}
                 </td>
-                <td className="p-3">
+                <td className="p-2">
                   {new Date(plan.endDate).toLocaleDateString()}
                 </td>
 
-                <td className="p-3 flex flex-col md:flex-row gap-2 justify-center">
+                <td className="p-2 flex flex-col md:flex-row gap-2 justify-center">
                   <button
                     onClick={() => handleEdit(plan)}
                     className="bg-yellow-500 px-3 py-1 text-white rounded"
@@ -227,9 +226,8 @@ const Plans = () => {
       {/* MODAL */}
       {open && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-2">
-
           <div
-            className={`p-5 w-full max-w-md rounded ${
+            className={`p-4 md:p-5 w-full max-w-md rounded ${
               isDark ? "bg-gray-800 text-white" : "bg-white text-black"
             }`}
           >
@@ -293,10 +291,50 @@ const Plans = () => {
               }`}
             />
 
-            {/* ACTIONS */}
-            <div className="flex justify-end gap-2 mt-3">
+            {/* FEATURES (UNCHANGED) */}
+            <div className="mb-2">
+              <label className="font-bold">Features</label>
+
+              {form.features.map((f, index) => (
+                <input
+                  key={index}
+                  value={f}
+                  onChange={(e) => {
+                    const updated = [...form.features];
+                    updated[index] = e.target.value;
+                    setForm({ ...form, features: updated });
+                  }}
+                  className={`w-full p-2 border mb-1 ${
+                    isDark ? "bg-gray-700 border-gray-600" : ""
+                  }`}
+                  placeholder="Feature"
+                />
+              ))}
+
               <button
-                onClick={() => setOpen(false)}
+                type="button"
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    features: [...form.features, ""],
+                  })
+                }
+                className="text-blue-600"
+              >
+                + Add Feature
+              </button>
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex flex-col md:flex-row justify-end gap-2 mt-3">
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  setForm(emptyForm);
+                  setImage(null);
+                  setPreview(null);
+                  setEditingId(null);
+                }}
                 className="bg-gray-400 px-3 py-1 rounded"
               >
                 Cancel
