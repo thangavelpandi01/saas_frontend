@@ -44,6 +44,21 @@ const Plans = () => {
     }
   };
 
+  const handleFeatureChange = (index, value) => {
+    const updated = [...form.features];
+    updated[index] = value;
+    setForm({ ...form, features: updated });
+  };
+
+  const addFeature = () => {
+    setForm({ ...form, features: [...form.features, ""] });
+  };
+
+  const removeFeature = (index) => {
+    const updated = form.features.filter((_, i) => i !== index);
+    setForm({ ...form, features: updated });
+  };
+
   const handleCreate = () => {
     setForm(emptyForm);
     setPreview(null);
@@ -59,7 +74,7 @@ const Plans = () => {
       duration: plan.duration,
       startDate: plan.startDate?.slice(0, 10),
       endDate: plan.endDate?.slice(0, 10),
-      features: plan.features || [""],
+      features: plan.features?.length ? plan.features : [""],
     });
 
     setPreview(
@@ -71,7 +86,6 @@ const Plans = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete?")) return;
-
     await dispatch(deletePlanThunk(id));
     dispatch(getPlansThunk());
   };
@@ -81,7 +95,10 @@ const Plans = () => {
 
     Object.entries(form).forEach(([k, v]) => {
       if (k === "features") {
-        formData.append("features", JSON.stringify(v));
+        formData.append(
+          "features",
+          JSON.stringify(v.filter((f) => f.trim()))
+        );
       } else {
         formData.append(k, v);
       }
@@ -92,8 +109,10 @@ const Plans = () => {
     if (editingId) {
       formData.append("id", editingId);
       await dispatch(updatePlanThunk(formData));
+      toast.success("Updated");
     } else {
       await dispatch(createPlanThunk(formData));
+      toast.success("Created");
     }
 
     setOpen(false);
@@ -101,23 +120,17 @@ const Plans = () => {
   };
 
   return (
-    <div
-      className={`min-h-screen p-4 ${
-        mode === "dark" ? "bg-gray-900 text-white" : "bg-gray-100"
-      }`}
-    >
+    <div className={`min-h-screen p-4 ${mode === "dark" ? "bg-gray-900 text-white" : "bg-gray-100"}`}>
+
       {/* HEADER */}
       <div className="flex justify-between mb-4">
         <h1 className="text-xl font-bold">Plans</h1>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-500 text-white px-3 py-1 rounded"
-        >
+        <button onClick={handleCreate} className="bg-blue-500 text-white px-3 py-1 rounded">
           + Add
         </button>
       </div>
 
-      {/* ================= DESKTOP TABLE ================= */}
+      {/* DESKTOP TABLE */}
       <div className="hidden md:block">
         <table className="w-full bg-white rounded shadow">
           <thead className="bg-gray-200">
@@ -126,36 +139,23 @@ const Plans = () => {
               <th>Name</th>
               <th>Price</th>
               <th>Duration</th>
+              <th>Features</th>
               <th>Actions</th>
             </tr>
           </thead>
-
           <tbody>
             {plans?.map((p) => (
               <tr key={p._id} className="text-center border-t">
                 <td>
-                  <img
-                    src={`https://saas-backend-1-eia8.onrender.com/uploads/${p.image}`}
-                    className="w-10 h-10 mx-auto"
-                  />
+                  <img src={`https://saas-backend-1-eia8.onrender.com/uploads/${p.image}`} className="w-10 h-10 mx-auto" />
                 </td>
                 <td>{p.name}</td>
                 <td>₹{p.price}</td>
                 <td>{p.duration}</td>
-
+                <td>{p.features?.join(", ")}</td>
                 <td className="flex gap-2 justify-center">
-                  <button
-                    onClick={() => handleEdit(p)}
-                    className="bg-yellow-500 px-2 text-white rounded"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(p._id)}
-                    className="bg-red-500 px-2 text-white rounded"
-                  >
-                    Delete
-                  </button>
+                  <button onClick={() => handleEdit(p)} className="bg-yellow-500 px-2 text-white rounded">Edit</button>
+                  <button onClick={() => handleDelete(p._id)} className="bg-red-500 px-2 text-white rounded">Delete</button>
                 </td>
               </tr>
             ))}
@@ -163,89 +163,60 @@ const Plans = () => {
         </table>
       </div>
 
-      {/* ================= MOBILE CARD ================= */}
+      {/* MOBILE CARD */}
       <div className="md:hidden space-y-4">
         {plans?.map((p) => (
-          <div
-            key={p._id}
-            className={`p-4 rounded shadow ${
-              mode === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
-          >
-            <div className="flex gap-3 items-center">
-              <img
-                src={`https://saas-backend-1-eia8.onrender.com/uploads/${p.image}`}
-                className="w-12 h-12 rounded"
-              />
+          <div key={p._id} className={`p-4 rounded shadow ${mode === "dark" ? "bg-gray-800" : "bg-white"}`}>
+            <img src={`https://saas-backend-1-eia8.onrender.com/uploads/${p.image}`} className="w-12 h-12 mb-2" />
+            <h2 className="font-bold">{p.name}</h2>
+            <p>₹{p.price}</p>
+            <p>{p.duration}</p>
+            <p className="text-sm mt-1">{p.features?.join(", ")}</p>
 
-              <div>
-                <h2 className="font-bold">{p.name}</h2>
-                <p>₹{p.price}</p>
-                <p>{p.duration}</p>
-              </div>
-            </div>
-
-            <div className="flex gap-2 mt-3">
-              <button
-                onClick={() => handleEdit(p)}
-                className="bg-yellow-500 px-3 py-1 text-white rounded w-full"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(p._id)}
-                className="bg-red-500 px-3 py-1 text-white rounded w-full"
-              >
-                Delete
-              </button>
+            <div className="flex gap-2 mt-2">
+              <button onClick={() => handleEdit(p)} className="bg-yellow-500 w-full text-white rounded">Edit</button>
+              <button onClick={() => handleDelete(p._id)} className="bg-red-500 w-full text-white rounded">Delete</button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ================= MODAL ================= */}
+      {/* MODAL */}
       {open && (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-          <div
-            className={`p-4 w-[90%] max-w-md rounded ${
-              mode === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
-          >
-            <input
-              name="name"
-              placeholder="Name"
-              value={form.name}
-              onChange={handleChange}
-              className="w-full border p-2 mb-2"
-            />
+          <div className={`p-4 w-[90%] max-w-md rounded ${mode === "dark" ? "bg-gray-800" : "bg-white"}`}>
 
-            <input
-              name="price"
-              placeholder="Price"
-              value={form.price}
-              onChange={handleChange}
-              className="w-full border p-2 mb-2"
-            />
+            <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="w-full border p-2 mb-2" />
+            <input name="price" value={form.price} onChange={handleChange} placeholder="Price" className="w-full border p-2 mb-2" />
+            <input name="duration" value={form.duration} onChange={handleChange} placeholder="Duration" className="w-full border p-2 mb-2" />
+
+            <input type="date" name="startDate" value={form.startDate} onChange={handleChange} className="w-full border p-2 mb-2" />
+            <input type="date" name="endDate" value={form.endDate} onChange={handleChange} className="w-full border p-2 mb-2" />
+
+            {/* FEATURES */}
+            <div>
+              <label className="font-bold">Features</label>
+              {form.features.map((f, i) => (
+                <div key={i} className="flex gap-2 mb-1">
+                  <input
+                    value={f}
+                    onChange={(e) => handleFeatureChange(i, e.target.value)}
+                    className="w-full border p-2"
+                  />
+                  <button onClick={() => removeFeature(i)} className="bg-red-500 text-white px-2">X</button>
+                </div>
+              ))}
+              <button onClick={addFeature} className="text-blue-500">+ Add Feature</button>
+            </div>
 
             <input type="file" onChange={handleImage} />
-
             {preview && <img src={preview} className="w-12 mt-2" />}
 
             <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => setOpen(false)}
-                className="bg-gray-400 w-full"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSubmit}
-                className="bg-blue-600 text-white w-full"
-              >
-                Save
-              </button>
+              <button onClick={() => setOpen(false)} className="bg-gray-400 w-full">Cancel</button>
+              <button onClick={handleSubmit} className="bg-blue-600 text-white w-full">Save</button>
             </div>
+
           </div>
         </div>
       )}
