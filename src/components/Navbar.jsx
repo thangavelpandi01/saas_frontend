@@ -6,17 +6,20 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // ✅ FIX
+  const navigate = useNavigate();
 
   const mode = useSelector((state) => state.theme.mode);
   const token = useSelector((state) => state.auth.token);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // ✅ NEW: Mobile menu state
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const handleLogout = () => {
     dispatch(logoutUser(token));
     setShowLogoutModal(false);
-    navigate("/login"); // ✅ works now
+    navigate("/login");
   };
 
   return (
@@ -29,7 +32,7 @@ export default function Navbar() {
             : "bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] text-white"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
 
           {/* BRAND */}
           <div
@@ -39,67 +42,109 @@ export default function Navbar() {
             SaaS App
           </div>
 
-          {/* MENU */}
+          {/* ================= DESKTOP MENU ================= */}
           <div className="hidden md:flex gap-8 font-medium">
 
-            <Link
-              className="hover:text-gray-200 transition"
-              to="/dashboard"
-            >
+            <Link className="hover:text-gray-200 transition" to="/dashboard">
               Dashboard
             </Link>
 
-            <Link
-              className="hover:text-gray-200 transition"
-              to="/plans"
-            >
+            <Link className="hover:text-gray-200 transition" to="/plans">
               Plans
             </Link>
 
-            <Link
-              className="hover:text-gray-200 transition"
-              to="/MyPlan"
-            >
+            <Link className="hover:text-gray-200 transition" to="/MyPlan">
               Active Plans
             </Link>
 
           </div>
 
-          {/* ACTIONS */}
-          <div className="flex items-center gap-4">
+          {/* ================= RIGHT SIDE ================= */}
+          <div className="flex items-center gap-3 md:gap-4">
 
             {/* THEME */}
             <button
               onClick={() => dispatch(toggleTheme())}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center"
+              className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 transition flex items-center justify-center"
             >
               {mode === "light" ? "🌙" : "☀️"}
             </button>
 
-            {/* LOGOUT */}
+            {/* LOGOUT (HIDE IN MOBILE MENU) */}
             <button
               onClick={() => setShowLogoutModal(true)}
-              className="px-4 py-2 text-sm font-semibold rounded-full
+              className="hidden md:block px-4 py-2 text-sm font-semibold rounded-full
                          bg-red-500 hover:bg-red-600
                          active:scale-95 transition-all duration-200 shadow-md"
             >
               Logout
             </button>
+
+            {/* ================= MOBILE MENU BUTTON ================= */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden text-2xl"
+            >
+              ☰
+            </button>
+
           </div>
         </div>
+
+        {/* ================= MOBILE MENU ================= */}
+        {menuOpen && (
+          <div
+            className={`md:hidden px-4 pb-4 space-y-3 ${
+              mode === "dark" ? "bg-gray-900" : "bg-blue-700"
+            }`}
+          >
+            <Link
+              to="/dashboard"
+              onClick={() => setMenuOpen(false)}
+              className="block py-2 border-b border-white/20"
+            >
+              Dashboard
+            </Link>
+
+            <Link
+              to="/plans"
+              onClick={() => setMenuOpen(false)}
+              className="block py-2 border-b border-white/20"
+            >
+              Plans
+            </Link>
+
+            <Link
+              to="/MyPlan"
+              onClick={() => setMenuOpen(false)}
+              className="block py-2 border-b border-white/20"
+            >
+              Active Plans
+            </Link>
+
+            {/* MOBILE LOGOUT */}
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                setShowLogoutModal(true);
+              }}
+              className="w-full text-left py-2 text-red-300"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* ================= MODAL ================= */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
 
-          {/* BACKDROP */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowLogoutModal(false)}
           />
 
-          {/* MODAL CARD */}
           <div className="relative bg-white rounded-2xl shadow-2xl w-[90%] max-w-md p-6 animate-fadeIn">
 
             <div className="flex justify-center mb-4">
