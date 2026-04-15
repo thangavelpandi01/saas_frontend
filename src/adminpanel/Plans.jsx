@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
 import {
   getPlansThunk,
   createPlanThunk,
   updatePlanThunk,
   deletePlanThunk,
 } from "../features/authSlice";
-
 import { toast } from "react-toastify";
 
 const Plans = () => {
   const dispatch = useDispatch();
-
   const { plans } = useSelector((state) => state.auth);
-  const mode = useSelector((state) => state.theme.mode); // ✅ THEME
+  const mode = useSelector((state) => state.theme.mode);
 
   const emptyForm = {
     name: "",
@@ -28,53 +25,41 @@ const Plans = () => {
   const [form, setForm] = useState(emptyForm);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
 
-  // ================= LOAD =================
   useEffect(() => {
     dispatch(getPlansThunk());
   }, [dispatch]);
 
-  // ================= INPUT =================
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ================= IMAGE =================
   const handleImage = (e) => {
     const file = e.target.files?.[0];
-
     if (file) {
       setImage(file);
       setPreview(URL.createObjectURL(file));
-    } else {
-      setImage(null);
-      setPreview(null);
     }
   };
 
-  // ================= CREATE =================
   const handleCreate = () => {
     setForm(emptyForm);
-    setImage(null);
     setPreview(null);
     setEditingId(null);
     setOpen(true);
   };
 
-  // ================= EDIT =================
   const handleEdit = (plan) => {
     setEditingId(plan._id);
-
     setForm({
-      name: plan.name || "",
-      price: plan.price || "",
-      startDate: plan.startDate?.slice(0, 10) || "",
-      endDate: plan.endDate?.slice(0, 10) || "",
-      duration: plan.duration || "",
-      features: plan.features?.length ? plan.features : [""],
+      name: plan.name,
+      price: plan.price,
+      duration: plan.duration,
+      startDate: plan.startDate?.slice(0, 10),
+      endDate: plan.endDate?.slice(0, 10),
+      features: plan.features || [""],
     });
 
     setPreview(
@@ -84,197 +69,179 @@ const Plans = () => {
     setOpen(true);
   };
 
-  // ================= DELETE =================
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure?")) return;
+    if (!window.confirm("Delete?")) return;
 
-    try {
-      await dispatch(deletePlanThunk(id)).unwrap();
-      toast.success("Deleted successfully");
-      dispatch(getPlansThunk());
-    } catch (err) {
-      toast.error("Delete failed");
-    }
+    await dispatch(deletePlanThunk(id));
+    dispatch(getPlansThunk());
   };
 
-  // ================= SUBMIT =================
   const handleSubmit = async () => {
     const formData = new FormData();
 
-    Object.entries(form).forEach(([key, value]) => {
-      if (key === "features") {
-        formData.append(
-          "features",
-          JSON.stringify(value.filter((f) => f.trim()))
-        );
+    Object.entries(form).forEach(([k, v]) => {
+      if (k === "features") {
+        formData.append("features", JSON.stringify(v));
       } else {
-        formData.append(key, value);
+        formData.append(k, v);
       }
     });
 
-    if (image instanceof File) {
-      formData.append("image", image);
+    if (image) formData.append("image", image);
+
+    if (editingId) {
+      formData.append("id", editingId);
+      await dispatch(updatePlanThunk(formData));
+    } else {
+      await dispatch(createPlanThunk(formData));
     }
 
-    try {
-      if (editingId) {
-        formData.append("id", editingId);
-        await dispatch(updatePlanThunk(formData)).unwrap();
-        toast.success("Updated");
-      } else {
-        await dispatch(createPlanThunk(formData)).unwrap();
-        toast.success("Created");
-      }
-
-      setOpen(false);
-      setForm(emptyForm);
-      setImage(null);
-      setPreview(null);
-      setEditingId(null);
-
-      dispatch(getPlansThunk());
-    } catch {
-      toast.error("Something went wrong");
-    }
+    setOpen(false);
+    dispatch(getPlansThunk());
   };
 
   return (
     <div
-      className={`min-h-screen p-6 transition ${
-        mode === "dark"
-          ? "bg-gray-900 text-white"
-          : "bg-gray-100 text-black"
+      className={`min-h-screen p-4 ${
+        mode === "dark" ? "bg-gray-900 text-white" : "bg-gray-100"
       }`}
     >
       {/* HEADER */}
       <div className="flex justify-between mb-4">
-        <h1 className="text-2xl font-bold">Plans</h1>
-
+        <h1 className="text-xl font-bold">Plans</h1>
         <button
           onClick={handleCreate}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-blue-500 text-white px-3 py-1 rounded"
         >
-          + Add Plan
+          + Add
         </button>
       </div>
 
-      {/* TABLE */}
-      <table
-        className={`w-full rounded shadow ${
-          mode === "dark" ? "bg-gray-800" : "bg-white"
-        }`}
-      >
-        <thead
-          className={mode === "dark" ? "bg-gray-700" : "bg-gray-200"}
-        >
-          <tr>
-            <th>Image</th>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Duration</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {plans?.map((plan) => (
-            <tr key={plan._id} className="text-center border-t">
-              <td>
-                <img
-                  src={`https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`}
-                  className="w-12 h-12 mx-auto rounded object-cover"
-                />
-              </td>
-
-              <td>{plan.name}</td>
-              <td>₹{plan.price}</td>
-              <td>{plan.duration}</td>
-              <td>{new Date(plan.startDate).toLocaleDateString()}</td>
-              <td>{new Date(plan.endDate).toLocaleDateString()}</td>
-
-              <td className="flex gap-2 justify-center">
-                <button
-                  onClick={() => handleEdit(plan)}
-                  className="bg-yellow-500 px-3 py-1 text-white rounded"
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => handleDelete(plan._id)}
-                  className="bg-red-500 px-3 py-1 text-white rounded"
-                >
-                  Delete
-                </button>
-              </td>
+      {/* ================= DESKTOP TABLE ================= */}
+      <div className="hidden md:block">
+        <table className="w-full bg-white rounded shadow">
+          <thead className="bg-gray-200">
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Duration</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
 
-      {/* MODAL */}
+          <tbody>
+            {plans?.map((p) => (
+              <tr key={p._id} className="text-center border-t">
+                <td>
+                  <img
+                    src={`https://saas-backend-1-eia8.onrender.com/uploads/${p.image}`}
+                    className="w-10 h-10 mx-auto"
+                  />
+                </td>
+                <td>{p.name}</td>
+                <td>₹{p.price}</td>
+                <td>{p.duration}</td>
+
+                <td className="flex gap-2 justify-center">
+                  <button
+                    onClick={() => handleEdit(p)}
+                    className="bg-yellow-500 px-2 text-white rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p._id)}
+                    className="bg-red-500 px-2 text-white rounded"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ================= MOBILE CARD ================= */}
+      <div className="md:hidden space-y-4">
+        {plans?.map((p) => (
+          <div
+            key={p._id}
+            className={`p-4 rounded shadow ${
+              mode === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <div className="flex gap-3 items-center">
+              <img
+                src={`https://saas-backend-1-eia8.onrender.com/uploads/${p.image}`}
+                className="w-12 h-12 rounded"
+              />
+
+              <div>
+                <h2 className="font-bold">{p.name}</h2>
+                <p>₹{p.price}</p>
+                <p>{p.duration}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => handleEdit(p)}
+                className="bg-yellow-500 px-3 py-1 text-white rounded w-full"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(p._id)}
+                className="bg-red-500 px-3 py-1 text-white rounded w-full"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ================= MODAL ================= */}
       {open && (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
           <div
-            className={`p-5 w-[450px] rounded ${
-              mode === "dark"
-                ? "bg-gray-800 text-white"
-                : "bg-white"
+            className={`p-4 w-[90%] max-w-md rounded ${
+              mode === "dark" ? "bg-gray-800" : "bg-white"
             }`}
           >
-            <h2 className="text-xl font-bold mb-3">
-              {editingId ? "Update Plan" : "Create Plan"}
-            </h2>
+            <input
+              name="name"
+              placeholder="Name"
+              value={form.name}
+              onChange={handleChange}
+              className="w-full border p-2 mb-2"
+            />
 
-            {/* INPUT */}
-            {["name", "price", "duration"].map((field) => (
-              <input
-                key={field}
-                name={field}
-                value={form[field]}
-                onChange={handleChange}
-                placeholder={field}
-                className={`w-full p-2 border mb-2 rounded ${
-                  mode === "dark"
-                    ? "bg-gray-700 border-gray-600"
-                    : ""
-                }`}
-              />
-            ))}
+            <input
+              name="price"
+              placeholder="Price"
+              value={form.price}
+              onChange={handleChange}
+              className="w-full border p-2 mb-2"
+            />
 
-            {/* IMAGE */}
             <input type="file" onChange={handleImage} />
 
-            {preview && (
-              <img src={preview} className="w-14 h-14 mt-2" />
-            )}
+            {preview && <img src={preview} className="w-12 mt-2" />}
 
-            {/* DATES */}
-            <input
-              type="date"
-              name="startDate"
-              value={form.startDate}
-              onChange={handleChange}
-              className="w-full p-2 border mt-2"
-            />
-
-            <input
-              type="date"
-              name="endDate"
-              value={form.endDate}
-              onChange={handleChange}
-              className="w-full p-2 border mt-2"
-            />
-
-            {/* ACTIONS */}
-            <div className="flex justify-end gap-2 mt-4">
-              <button onClick={() => setOpen(false)}>Cancel</button>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setOpen(false)}
+                className="bg-gray-400 w-full"
+              >
+                Cancel
+              </button>
 
               <button
                 onClick={handleSubmit}
-                className="bg-blue-600 text-white px-3 py-1 rounded"
+                className="bg-blue-600 text-white w-full"
               >
                 Save
               </button>
