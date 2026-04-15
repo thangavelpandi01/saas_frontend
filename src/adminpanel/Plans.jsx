@@ -181,11 +181,7 @@ const Plans = () => {
 
               <td>
                 <img
-                  src={
-                    plan.image
-                      ? `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`
-                      : "https://via.placeholder.com/80"
-                  }
+                  src={ `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}` }
                   className="w-12 h-12 mx-auto rounded object-cover"
                 />
               </td>
