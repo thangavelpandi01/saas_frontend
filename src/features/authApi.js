@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://saas-backend-1-eia8.onrender.com/api", 
+  baseURL: "https://saas-backend-1-eia8.onrender.com", 
 });
 
 // ✅ Attach token automatically
