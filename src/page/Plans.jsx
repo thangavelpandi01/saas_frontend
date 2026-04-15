@@ -144,12 +144,8 @@ export default function Plan() {
               )}
 
               {/* DYNAMIC IMAGE */}
-              <img
-                src={
-                  plan.image
-                    ? `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`
-                    : "https://via.placeholder.com/400"
-                }
+               <img
+                src={ `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`}
                 className="w-full h-60 object-cover bg-white"
                 alt={plan.name}
               />
