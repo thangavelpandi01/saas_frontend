@@ -62,11 +62,7 @@ export default function MyPlan() {
 
                 {/* IMAGE (dynamic fallback) */}
                 <img
-                  src={
-                    planData.image
-                      ? `http://localhost:3000/uploads/${planData.image}`
-                      : "https://source.unsplash.com/400x200/?subscription,tech"
-                  }
+                  src={ `https://saas-backend-1-eia8.onrender.com/uploads/${planData.image}`}
                   alt={planData.name}
                   className="w-full h-40 object-cover"
                 />
