@@ -13,17 +13,18 @@ const Plans = () => {
   const dispatch = useDispatch();
   const { plans } = useSelector((state) => state.auth);
 
-  const [open, setOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-
-  const [form, setForm] = useState({
+  const emptyForm = {
     name: "",
     price: "",
     startDate: "",
     endDate: "",
     duration: "",
     features: [""],
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
+  const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -35,29 +36,55 @@ const Plans = () => {
 
   // ================= INPUT =================
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   // ================= IMAGE =================
   const handleImage = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    if (file) setPreview(URL.createObjectURL(file));
+    const file = e.target.files?.[0];
+
+    if (file) {
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
+    } else {
+      setImage(null);
+      setPreview(null);
+    }
+  };
+
+  // ================= CREATE OPEN =================
+  const handleCreate = () => {
+    setForm(emptyForm);
+    setImage(null);
+    setPreview(null);
+    setEditingId(null);
+    setOpen(true);
   };
 
   // ================= EDIT =================
   const handleEdit = (plan) => {
+    setEditingId(plan._id);
+
     setForm({
-      name: plan.name,
-      price: plan.price,
-      startDate: plan.startDate?.slice(0, 10),
-      endDate: plan.endDate?.slice(0, 10),
-      duration: plan.duration,
-      features: plan.features || [""],
+      name: plan.name || "",
+      price: plan.price || "",
+      startDate: plan.startDate ? plan.startDate.slice(0, 10) : "",
+      endDate: plan.endDate ? plan.endDate.slice(0, 10) : "",
+      duration: plan.duration || "",
+      features:
+        Array.isArray(plan.features) && plan.features.length > 0
+          ? plan.features
+          : [""],
     });
 
-    setPreview(`http://localhost:3000/uploads/${plan.image}`);
-    setEditingId(plan._id);
+    setImage(null);
+
+    setPreview(
+      plan.image
+        ? `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`
+        : null
+    );
+
     setOpen(true);
   };
 
@@ -67,7 +94,7 @@ const Plans = () => {
 
     try {
       await dispatch(deletePlanThunk(id)).unwrap();
-      toast.success("Plan deleted successfully");
+      toast.success("Deleted successfully");
       dispatch(getPlansThunk());
     } catch (err) {
       toast.error(err?.message || "Delete failed");
@@ -84,42 +111,34 @@ const Plans = () => {
     formData.append("endDate", form.endDate);
     formData.append("duration", form.duration);
 
-    if (editingId) {
-      formData.append("id", editingId);
-    }
+    // ✅ CLEAN FEATURES (NO "null")
+    const cleanFeatures = form.features
+      .filter((f) => typeof f === "string")
+      .map((f) => f.trim())
+      .filter((f) => f !== "");
 
-    if (image) {
+    formData.append("features", JSON.stringify(cleanFeatures));
+
+    // ✅ IMAGE SAFE CHECK
+    if (image instanceof File) {
       formData.append("image", image);
     }
 
-    formData.append(
-      "features",
-      JSON.stringify(form.features.filter((f) => f.trim() !== ""))
-    );
-
     try {
       if (editingId) {
+        formData.append("id", editingId);
         await dispatch(updatePlanThunk(formData)).unwrap();
-        toast.success("Plan updated successfully");
+        toast.success("Updated successfully");
       } else {
         await dispatch(createPlanThunk(formData)).unwrap();
-        toast.success("Plan created successfully");
+        toast.success("Created successfully");
       }
 
-      setOpen(false);
-      setEditingId(null);
-
-      setForm({
-        name: "",
-        price: "",
-        startDate: "",
-        endDate: "",
-        duration: "",
-        features: [""],
-      });
-
+      setForm(emptyForm);
       setImage(null);
       setPreview(null);
+      setEditingId(null);
+      setOpen(false);
 
       dispatch(getPlansThunk());
     } catch (err) {
@@ -129,12 +148,13 @@ const Plans = () => {
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
+
       {/* HEADER */}
       <div className="flex justify-between mb-4">
         <h1 className="text-2xl font-bold">Plans</h1>
 
         <button
-          onClick={() => setOpen(true)}
+          onClick={handleCreate}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           + Add Plan
@@ -142,62 +162,68 @@ const Plans = () => {
       </div>
 
       {/* TABLE */}
-      <div className="overflow-x-auto">
-        <table className="w-full bg-white shadow rounded">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="p-3">Image</th>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Duration</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Actions</th>
+      <table className="w-full bg-white shadow rounded">
+        <thead className="bg-gray-200">
+          <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Duration</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {plans?.map((plan) => (
+            <tr key={plan._id} className="text-center border-t">
+
+              <td>
+                <img
+                  src={
+                    plan.image
+                      ? `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`
+                      : "https://via.placeholder.com/80"
+                  }
+                  className="w-12 h-12 mx-auto rounded object-cover"
+                />
+              </td>
+
+              <td>{plan.name}</td>
+              <td>₹{plan.price}</td>
+              <td>{plan.duration}</td>
+              <td>{new Date(plan.startDate).toLocaleDateString()}</td>
+              <td>{new Date(plan.endDate).toLocaleDateString()}</td>
+
+              <td className="flex gap-2 justify-center">
+
+                <button
+                  onClick={() => handleEdit(plan)}
+                  className="bg-yellow-500 px-3 py-1 text-white rounded"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => handleDelete(plan._id)}
+                  className="bg-red-500 px-3 py-1 text-white rounded"
+                >
+                  Delete
+                </button>
+
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {plans?.map((plan) => (
-              <tr key={plan._id} className="text-center border-t">
-                <td className="p-2">
-                  <img
-                    src={`http://localhost:3000/uploads/${plan.image}`}
-                    className="w-12 h-12 rounded object-cover mx-auto"
-                  />
-                </td>
-
-                <td>{plan.name}</td>
-                <td>₹{plan.price}</td>
-                <td>{plan.duration}</td>
-
-                <td>{new Date(plan.startDate).toLocaleDateString()}</td>
-                <td>{new Date(plan.endDate).toLocaleDateString()}</td>
-
-                <td className="flex gap-2 justify-center p-2">
-                  <button
-                    onClick={() => handleEdit(plan)}
-                    className="bg-yellow-500 px-3 py-1 text-white rounded"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(plan._id)}
-                    className="bg-red-500 px-3 py-1 text-white rounded"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
 
       {/* MODAL */}
       {open && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+
           <div className="bg-white p-5 w-[450px] rounded">
+
             <h2 className="text-xl font-bold mb-3">
               {editingId ? "Update Plan" : "Create Plan"}
             </h2>
@@ -226,6 +252,7 @@ const Plans = () => {
               className="w-full p-2 border mb-2"
             />
 
+            {/* IMAGE */}
             <input type="file" onChange={handleImage} className="mb-2" />
 
             {preview && (
@@ -248,9 +275,49 @@ const Plans = () => {
               className="w-full p-2 border mb-2"
             />
 
-            <div className="flex justify-end gap-2 mt-3">
+            {/* FEATURES */}
+            <div className="mb-2">
+              <label className="font-bold">Features</label>
+
+              {form.features.map((f, index) => (
+                <input
+                  key={index}
+                  value={f}
+                  onChange={(e) => {
+                    const updated = [...form.features];
+                    updated[index] = e.target.value;
+                    setForm({ ...form, features: updated });
+                  }}
+                  className="w-full p-2 border mb-1"
+                  placeholder="Feature"
+                />
+              ))}
+
               <button
-                onClick={() => setOpen(false)}
+                type="button"
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    features: [...form.features, ""],
+                  })
+                }
+                className="text-blue-600"
+              >
+                + Add Feature
+              </button>
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex justify-end gap-2 mt-3">
+
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  setForm(emptyForm);
+                  setImage(null);
+                  setPreview(null);
+                  setEditingId(null);
+                }}
                 className="bg-gray-400 px-3 py-1 rounded"
               >
                 Cancel
@@ -262,10 +329,13 @@ const Plans = () => {
               >
                 {editingId ? "Update" : "Save"}
               </button>
+
             </div>
+
           </div>
         </div>
       )}
+
     </div>
   );
 };
