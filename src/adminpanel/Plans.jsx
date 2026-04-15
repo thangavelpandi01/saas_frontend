@@ -79,11 +79,7 @@ const Plans = () => {
 
     setImage(null);
 
-    setPreview(
-      plan.image
-        ? `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`
-        : null
-    );
+    setPreview( `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`: null );
 
     setOpen(true);
   };
