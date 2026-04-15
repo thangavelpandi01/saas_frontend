@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function AdminNavbar() {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // ✅ FIX
+  const navigate = useNavigate(); 
 
   const mode = useSelector((state) => state.theme.mode);
   const token = useSelector((state) => state.auth.token);
