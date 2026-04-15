@@ -169,7 +169,7 @@ export const verifyPaymentThunk = createAsyncThunk(
   "payment/verify",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:3000/api/auth/verify", {
+      const res = await fetch("https://saas-backend-1-eia8.onrender.com/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -188,7 +188,7 @@ export const subscribeThunk = createAsyncThunk(
   async (planId, { rejectWithValue }) => {
     try {
       const res = await fetch(
-        `http://localhost:3000/api/auth/subscribe/${planId}`,
+        `https://saas-backend-1-eia8.onrender.com/api/auth/subscribe/${planId}`,
         {
           method: "POST",
           headers: {
