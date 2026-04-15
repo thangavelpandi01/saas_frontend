@@ -30,7 +30,7 @@ export const getMyPlans = () => API.get("/auth/my-subscriptions");
 
 export const createOrder = (data) => API.post("/auth/create-order", data);
 
-export const dashboard = (data) => API.post("/auth/dashboard", data);
+export const dashboard = (data) => API.post("/auth/userDashboard", data);
 
 export const createPlan = (data) => API.post("/auth/plans", data);
 
