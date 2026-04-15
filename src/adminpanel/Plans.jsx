@@ -13,9 +13,6 @@ const Plans = () => {
   const dispatch = useDispatch();
   const { plans } = useSelector((state) => state.auth);
 
-  // ✅ THEME STATE (ONLY ADDITION)
-  const [darkMode, setDarkMode] = useState(false);
-
   const emptyForm = {
     name: "",
     price: "",
@@ -32,16 +29,20 @@ const Plans = () => {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
 
+  // ================= LOAD =================
   useEffect(() => {
     dispatch(getPlansThunk());
   }, [dispatch]);
 
+  // ================= INPUT =================
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // ================= IMAGE =================
   const handleImage = (e) => {
     const file = e.target.files?.[0];
+
     if (file) {
       setImage(file);
       setPreview(URL.createObjectURL(file));
@@ -51,6 +52,7 @@ const Plans = () => {
     }
   };
 
+  // ================= CREATE OPEN =================
   const handleCreate = () => {
     setForm(emptyForm);
     setImage(null);
@@ -59,6 +61,7 @@ const Plans = () => {
     setOpen(true);
   };
 
+  // ================= EDIT =================
   const handleEdit = (plan) => {
     setEditingId(plan._id);
 
@@ -76,13 +79,12 @@ const Plans = () => {
 
     setImage(null);
 
-    setPreview(
-      `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`
-    );
+    setPreview(`https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}` );
 
     setOpen(true);
   };
 
+  // ================= DELETE =================
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
 
@@ -95,6 +97,7 @@ const Plans = () => {
     }
   };
 
+  // ================= SUBMIT =================
   const handleSubmit = async () => {
     const formData = new FormData();
 
@@ -104,6 +107,7 @@ const Plans = () => {
     formData.append("endDate", form.endDate);
     formData.append("duration", form.duration);
 
+    // ✅ CLEAN FEATURES (NO "null")
     const cleanFeatures = form.features
       .filter((f) => typeof f === "string")
       .map((f) => f.trim())
@@ -111,6 +115,7 @@ const Plans = () => {
 
     formData.append("features", JSON.stringify(cleanFeatures));
 
+    // ✅ IMAGE SAFE CHECK
     if (image instanceof File) {
       formData.append("image", image);
     }
@@ -138,149 +143,193 @@ const Plans = () => {
   };
 
   return (
-    <div className={`${darkMode ? "dark" : ""}`}>
-      <div className="min-h-screen p-4 md:p-6 bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
+    <div className="min-h-screen p-6 bg-gray-100">
 
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row justify-between mb-4 gap-2">
+      {/* HEADER */}
+      <div className="flex justify-between mb-4">
+        <h1 className="text-2xl font-bold">Plans</h1>
 
-          <h1 className="text-xl md:text-2xl font-bold">Plans</h1>
+        <button
+          onClick={handleCreate}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          + Add Plan
+        </button>
+      </div>
 
-          <div className="flex gap-2 flex-col md:flex-row">
+      {/* TABLE */}
+      <table className="w-full bg-white shadow rounded">
+        <thead className="bg-gray-200">
+          <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Duration</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
 
-            {/* ✅ THEME TOGGLE */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="bg-gray-700 text-white px-4 py-2 rounded"
-            >
-              {darkMode ? "Light Mode ☀️" : "Dark Mode 🌙"}
-            </button>
+        <tbody>
+          {plans?.map((plan) => (
+            <tr key={plan._id} className="text-center border-t">
 
-            <button
-              onClick={handleCreate}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              + Add Plan
-            </button>
+              <td>
+                <img
+                  src={
+                     `https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`
+                  }
+                  className="w-12 h-12 mx-auto rounded object-cover"
+                />
+              </td>
 
-          </div>
-        </div>
+              <td>{plan.name}</td>
+              <td>₹{plan.price}</td>
+              <td>{plan.duration}</td>
+              <td>{new Date(plan.startDate).toLocaleDateString()}</td>
+              <td>{new Date(plan.endDate).toLocaleDateString()}</td>
 
-        {/* TABLE */}
-        <div className="overflow-x-auto rounded shadow">
-          <table className="min-w-[700px] w-full bg-white dark:bg-gray-800">
+              <td className="flex gap-2 justify-center">
 
-            <thead className="bg-gray-200 dark:bg-gray-700">
-              <tr>
-                <th className="p-2">Image</th>
-                <th className="p-2">Name</th>
-                <th className="p-2">Price</th>
-                <th className="p-2">Duration</th>
-                <th className="p-2">Start</th>
-                <th className="p-2">End</th>
-                <th className="p-2">Actions</th>
-              </tr>
-            </thead>
+                <button
+                  onClick={() => handleEdit(plan)}
+                  className="bg-yellow-500 px-3 py-1 text-white rounded"
+                >
+                  Edit
+                </button>
 
-            <tbody>
-              {plans?.map((plan) => (
-                <tr key={plan._id} className="border-t dark:border-gray-600 text-center">
-                  <td className="p-2">
-                    <img
-                      src={`https://saas-backend-1-eia8.onrender.com/uploads/${plan.image}`}
-                      className="w-10 h-10 md:w-12 md:h-12 mx-auto rounded object-cover"
-                    />
-                  </td>
+                <button
+                  onClick={() => handleDelete(plan._id)}
+                  className="bg-red-500 px-3 py-1 text-white rounded"
+                >
+                  Delete
+                </button>
 
-                  <td className="p-2">{plan.name}</td>
-                  <td className="p-2">₹{plan.price}</td>
-                  <td className="p-2">{plan.duration}</td>
-                  <td className="p-2">{new Date(plan.startDate).toLocaleDateString()}</td>
-                  <td className="p-2">{new Date(plan.endDate).toLocaleDateString()}</td>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-                  <td className="p-2 flex flex-col md:flex-row gap-2 justify-center">
-                    <button
-                      onClick={() => handleEdit(plan)}
-                      className="bg-yellow-500 px-3 py-1 text-white rounded"
-                    >
-                      Edit
-                    </button>
+      {/* MODAL */}
+      {open && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
 
-                    <button
-                      onClick={() => handleDelete(plan._id)}
-                      className="bg-red-500 px-3 py-1 text-white rounded"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
+          <div className="bg-white p-5 w-[450px] rounded">
+
+            <h2 className="text-xl font-bold mb-3">
+              {editingId ? "Update Plan" : "Create Plan"}
+            </h2>
+
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Name"
+              className="w-full p-2 border mb-2"
+            />
+
+            <input
+              name="price"
+              value={form.price}
+              onChange={handleChange}
+              placeholder="Price"
+              className="w-full p-2 border mb-2"
+            />
+
+            <input
+              name="duration"
+              value={form.duration}
+              onChange={handleChange}
+              placeholder="Duration"
+              className="w-full p-2 border mb-2"
+            />
+
+            {/* IMAGE */}
+            <input type="file" onChange={handleImage} className="mb-2" />
+
+            {preview && (
+              <img src={preview} className="w-14 h-14 mb-2 rounded" />
+            )}
+
+            <input
+              type="date"
+              name="startDate"
+              value={form.startDate}
+              onChange={handleChange}
+              className="w-full p-2 border mb-2"
+            />
+
+            <input
+              type="date"
+              name="endDate"
+              value={form.endDate}
+              onChange={handleChange}
+              className="w-full p-2 border mb-2"
+            />
+
+            {/* FEATURES */}
+            <div className="mb-2">
+              <label className="font-bold">Features</label>
+
+              {form.features.map((f, index) => (
+                <input
+                  key={index}
+                  value={f}
+                  onChange={(e) => {
+                    const updated = [...form.features];
+                    updated[index] = e.target.value;
+                    setForm({ ...form, features: updated });
+                  }}
+                  className="w-full p-2 border mb-1"
+                  placeholder="Feature"
+                />
               ))}
-            </tbody>
 
-          </table>
-        </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    features: [...form.features, ""],
+                  })
+                }
+                className="text-blue-600"
+              >
+                + Add Feature
+              </button>
+            </div>
 
-        {/* MODAL */}
-        {open && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-2">
+            {/* ACTIONS */}
+            <div className="flex justify-end gap-2 mt-3">
 
-            <div className="bg-white dark:bg-gray-800 p-4 md:p-5 w-full max-w-md rounded">
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  setForm(emptyForm);
+                  setImage(null);
+                  setPreview(null);
+                  setEditingId(null);
+                }}
+                className="bg-gray-400 px-3 py-1 rounded"
+              >
+                Cancel
+              </button>
 
-              <h2 className="text-lg md:text-xl font-bold mb-3">
-                {editingId ? "Update Plan" : "Create Plan"}
-              </h2>
-
-              <input name="name" value={form.name} onChange={handleChange}
-                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-                placeholder="Name"
-              />
-
-              <input name="price" value={form.price} onChange={handleChange}
-                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-                placeholder="Price"
-              />
-
-              <input name="duration" value={form.duration} onChange={handleChange}
-                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-                placeholder="Duration"
-              />
-
-              <input type="file" onChange={handleImage} className="mb-2" />
-
-              {preview && (
-                <img src={preview} className="w-14 h-14 mb-2 rounded" />
-              )}
-
-              <input type="date" name="startDate" value={form.startDate}
-                onChange={handleChange}
-                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-              />
-
-              <input type="date" name="endDate" value={form.endDate}
-                onChange={handleChange}
-                className="w-full p-2 border dark:border-gray-600 bg-white dark:bg-gray-700 mb-2"
-              />
-
-              <div className="flex justify-end gap-2 mt-3">
-                <button
-                  onClick={() => setOpen(false)}
-                  className="bg-gray-400 px-3 py-1 rounded"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  onClick={handleSubmit}
-                  className="bg-blue-600 text-white px-3 py-1 rounded"
-                >
-                  {editingId ? "Update" : "Save"}
-                </button>
-              </div>
+              <button
+                onClick={handleSubmit}
+                className="bg-blue-600 text-white px-3 py-1 rounded"
+              >
+                {editingId ? "Update" : "Save"}
+              </button>
 
             </div>
+
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
     </div>
   );
 };
